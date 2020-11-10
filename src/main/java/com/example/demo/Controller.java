@@ -14,27 +14,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class Controller extends SpringBootServletInitializer{
 	
 	List<Book> listBook = new ArrayList<>();
+	JSONObject jsonObject = new JSONObject();
 	
 	@GetMapping("/")
 	public String home(){
 		return "Hello World";
-	}
-	
-	@GetMapping("/listBook")
-	public List<Book> getAllBook(){
-		return listBook;
-	}
-	
-	@PostMapping("/listBook/add")
-	public String addBook(@RequestBody Book book){
-		listBook.add(book);
-		return "book add"; 
-	}
-	
-	@PostMapping("/listBook/addAll")
-	public String addBook(@RequestBody List<Book> book){
-		listBook.addAll(book);
-		return "book add all"; 
 	}
 	
 	@PostMapping("/listBook/searchBy")
@@ -70,5 +54,81 @@ public class Controller extends SpringBootServletInitializer{
 		
 		
 	}
+	
+	@GetMapping("/listBook")
+	public List<Book> getAllBook(){
+		return listBook;
+	}
+	
+	@PostMapping("/listBook/add")
+	public String addBook(@RequestBody Book book){
+		listBook.add(book);
+		return "book add"; 
+	}
+	
+	@PostMapping("/listBook/addAll")
+	public String addBook(@RequestBody List<Book> book){
+		listBook.addAll(book);
+		return "book add all"; 
+	}
+	
+	@PostMapping("/import/json")
+	public String importJson(@RequestBody String json){
+		jsonObject = new JSONObject(json);
+		//System.err.println(jsonObject.getJSONObject("feed").getJSONArray("entry").get(0));
+		return "upload json ok"; 
+	}
+	
+	@PostMapping("/import/json/search")
+	public String searchJson(@RequestBody String json){
+		JSONObject respons = new JSONObject(json);
+		String level = (String) respons.get("level");
+		String objFind = (String) respons.get("objFind");
+		String find = (String) respons.get("find");
+		
+		if(level.equalsIgnoreCase("1")){
+			if(jsonObject.getJSONObject("feed").get(objFind).toString().equalsIgnoreCase(find)){
+				return jsonObject.getJSONObject("feed").get(objFind).toString();
+			}else{
+				return "data not found";
+			}
+		}else if(level.equalsIgnoreCase("2")){
+			int size = jsonObject.getJSONObject("feed").getJSONArray("entry").length();
+			
+			for(int c = 0 ; c < size ; c++){
+				JSONObject entryRespons = new JSONObject(jsonObject.getJSONObject("feed").getJSONArray("entry").get(c).toString());
+				if(entryRespons.get(objFind).toString().equalsIgnoreCase(find)){
+					return entryRespons.toString();
+				}else{
+					return "data not found";
+				}
+			}
+		}
+		return "upload json ok"; 
+	}
+	
+	@PostMapping("/import/json/add")
+	public String addJson(@RequestBody String json){
+		JSONObject respons = new JSONObject(json);
+		String level = (String) respons.get("level");
+		respons.remove("level");
+		
+		if(level.equalsIgnoreCase("1")){
+			jsonObject.put("feed", respons);
+		}else if(level.equalsIgnoreCase("2")){
+			jsonObject.getJSONObject("feed").put("entry", respons);
+		}
+		
+		return "ok";
+	}
+	
+	@GetMapping("/import/json/check")
+	public String checkJson(){
+		return jsonObject.toString();
+	}
+	
+	
+	
+	
 
 }
